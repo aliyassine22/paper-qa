@@ -1,0 +1,40 @@
+# Environment variables
+.env
+
+# Python
+__pycache__/
+
+# Vector databases
+VectorDB/
+*.sqlite3
+chroma.sqlite3
+
+# Jupyter Notebooks
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+logs/
+
+# Cache
+.cache/
+*.cache
+
+# Temporary files
+*.tmp
+*.temp
+tmp/
+temp/
