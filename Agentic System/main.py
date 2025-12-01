@@ -156,61 +156,12 @@ async def chat(request: ChatRequest):
         )
 
 
-@app.post("/chat/single", response_model=ChatResponse)
-async def chat_single(request: ChatRequest):
-    """
-    Send a single message without conversation history.
-    Useful for one-off queries.
-    """
-    if not assistant or not assistant.is_ready:
-        raise HTTPException(
-            status_code=503, 
-            detail="Research Assistant not initialized. Make sure MCP server is running."
-        )
-    
-    try:
-        response = await assistant.chat_single(request.message)
-        return ChatResponse(response=response, success=True)
-    except Exception as e:
-        return ChatResponse(
-            response="",
-            success=False,
-            error=str(e)
-        )
-
 @app.post("/clear")
 async def clear_history():
     """Clear the conversation history."""
     if assistant:
         assistant.clear_history()
     return {"message": "Conversation history cleared"}
-
-
-@app.post("/reinitialize")
-async def reinitialize():
-    """
-    Reinitialize the assistant connection.
-    Useful if MCP server was restarted.
-    """
-    global assistant
-    
-    if assistant:
-        await assistant.close()
-    
-    assistant = ResearchAssistant(
-        mcp_server_url="http://127.0.0.1:8787/sse",
-        model_name="gpt-4o-mini"
-    )
-    
-    success = await assistant.initialize()
-    
-    if success:
-        return {"message": "Assistant reinitialized successfully", "success": True}
-    else:
-        raise HTTPException(
-            status_code=503,
-            detail="Failed to reinitialize. Make sure MCP server is running."
-        )
 
 
 # ============== Run with Uvicorn ==============

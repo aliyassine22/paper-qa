@@ -1,17 +1,17 @@
 # Project requirements for Research Assistant Multi-Agent System
-# Pin versions where the project used/required specific releases; leave others flexible.
+# Versions pinned to match the development environment.
 
 # Web / API
-fastapi>=0.95.0
-uvicorn[standard]>=0.22.0
+fastapi==0.109.0
+uvicorn[standard]==0.27.0
 
 # OpenAI + embeddings
-openai>=0.27.0
-python-dotenv>=1.0.0
+openai==1.99.1
+python-dotenv==1.0.0
 
 # HTTP / scraping
-requests>=2.31.0
-arxiv>=1.4.0
+requests==2.32.4
+arxiv==2.3.1
 
 # Data models
 pydantic==2.12.5
@@ -19,25 +19,19 @@ pydantic-settings==2.12.0
 
 # Vector DB / RAG
 chromadb==1.3.5
-langchain>=0.0.300
-langchain-openai>=0.3.0
-langchain-community>=0.0.7
+langchain==0.3.27
+langchain-openai==0.3.28
+langchain-community==0.3.27
 
 # LangGraph / Agent pieces
-langgraph>=0.1.0
+langgraph==0.6.3
 
 # MCP server (FastMCP client/server)
-mcp>=0.1.0
+mcp==1.12.3
 
 # PDF loading / text splitting / embeddings
 PyMuPDF==1.26.6
 lark==1.3.1
 
 # Extras (useful tools; optional)
-tqdm>=4.65.0
-
-# NOTE:
-# - Some imports refer to wrapper packages (e.g. `langchain_openai`, `langchain_community`).
-#   The pip package names used above cover the common distributions that expose these modules.
-# - If you see import errors after installing these, try installing the specific provider packages
-#   referenced by the code (for example `pip install langchain-openai` or `pip install langchain-community`).
+tqdm==4.67.1

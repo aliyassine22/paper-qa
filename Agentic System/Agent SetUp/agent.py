@@ -96,12 +96,26 @@ class MCPConnectionManager:
     
     async def close(self):
         """Close the MCP connection."""
-        if self.session:
-            await self.session.__aexit__(None, None, None)
-        if self.client:
-            await self.client.__aexit__(None, None, None)
+        # Note: MCP sessions use anyio task groups which can't be exited from
+        # a different task than they were entered in. We just reset state here
+        # and let garbage collection handle cleanup.
+        try:
+            if self.session:
+                await self.session.__aexit__(None, None, None)
+        except RuntimeError:
+            pass  # Task group exit from different task - expected in some contexts
+        except Exception:
+            pass  # Ignore other cleanup errors
+        
+        try:
+            if self.client:
+                await self.client.__aexit__(None, None, None)
+        except Exception:
+            pass
+        
         self._initialized = False
         self.session = None
+        self.client = None
     
     @property
     def is_connected(self) -> bool:
