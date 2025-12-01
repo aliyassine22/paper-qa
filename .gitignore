@@ -38,3 +38,6 @@ logs/
 *.temp
 tmp/
 temp/
+
+# Virtual Environment
+.venv/
