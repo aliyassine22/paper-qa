@@ -308,14 +308,32 @@ def download_pdf(
         
         # Add to vector database if requested
         vectordb_indexed = False
+        rag_reinitialized = False
         if add_to_vectordb:
             vectordb_indexed = _add_to_vectordb(file_path, papers_base_path=PAPERS_PATH)
+            
+            # If vectordb was updated, reinitialize the RAG tool to pick up new documents
+            if vectordb_indexed:
+                try:
+                    from RagTool import rag_tool
+                    rag_tool._initialize_components()
+                    rag_reinitialized = True
+                except Exception as e:
+                    # If reinitialization fails, log but don't break the flow
+                    print(f"Warning: RAG reinit failed: {e}")
+        
+        # Build result message
+        message = f"Downloaded: {file_path}"
+        if vectordb_indexed:
+            message += " | Added to vector database ✓"
+            if rag_reinitialized:
+                message += " | RAG reinitialized ✓"
         
         return {
             "success": True,
             "file_path": str(file_path),
             "vectordb_indexed": vectordb_indexed,
-            "message": f"Downloaded: {file_path}" + (" | Added to vector database ✓" if vectordb_indexed else "")
+            "message": message
         }
         
     except requests.RequestException as e:
