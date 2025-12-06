@@ -23,7 +23,7 @@ langchain==0.3.27
 langchain-core==0.3.72
 langchain-openai==0.3.28
 langchain-community==0.3.27
-langchain-chroma==1.0.0
+
 
 # LangGraph / Agent pieces
 langgraph==0.6.3
