@@ -30,7 +30,8 @@ sys.path.append('../..')
 from RagTool import (
     ResearchProbeArgs,
     ResearchProbeResponse,
-    _research_probe_fn
+    _research_probe_fn,
+    rag_tool  # Import the rag_tool instance for startup initialization
 )
 from corpus_expansion import (
     SearchArxivArgs,
@@ -48,6 +49,53 @@ mcp = FastMCP(
     host="0.0.0.0",
     port=8787
 )
+
+
+# ============== Startup Initialization ==============
+
+def initialize_rag_on_startup():
+    """
+    Initialize the RAG system at server startup.
+    This ensures:
+    1. VectorDB is loaded or created before any queries
+    2. Any new PDFs in the Papers folder are indexed
+    """
+    print("\n" + "="*60)
+    print("🔧 Initializing RAG Knowledge Base...")
+    print("="*60)
+    
+    try:
+        # Force initialization of RAG components
+        rag_tool._initialize_components()
+        
+        # Get stats about the knowledge base
+        if rag_tool._vectordb is not None:
+            try:
+                collection = rag_tool._vectordb._collection
+                count = collection.count()
+                print(f"✓ VectorDB loaded with {count} document chunks")
+                
+                # Get unique papers
+                result = collection.get(include=["metadatas"])
+                unique_papers = set()
+                for metadata in result.get("metadatas", []):
+                    if metadata and "paper_title" in metadata:
+                        unique_papers.add(metadata["paper_title"])
+                print(f"✓ {len(unique_papers)} unique papers indexed")
+                
+            except Exception as e:
+                print(f"✓ VectorDB initialized (could not get stats: {e})")
+        else:
+            print("⚠ VectorDB is None after initialization")
+            
+        print("="*60)
+        print("✓ RAG Knowledge Base ready!")
+        print("="*60 + "\n")
+        
+    except Exception as e:
+        print(f"✗ Failed to initialize RAG: {e}")
+        print("  The system will attempt lazy initialization on first query.")
+        print("="*60 + "\n")
 
 
 # ============== Tool 1: Research Paper Probe (RAG) ==============
@@ -246,10 +294,21 @@ def mcp_generate_report(
 # ============== Server Entry Point ==============
 
 if __name__ == "__main__":
-    print("Starting Research Assistant MCP Server...")
-    print("Available tools:")
+    print("\n" + "="*60)
+    print("🚀 Starting Research Assistant MCP Server...")
+    print("="*60)
+    print("\nAvailable tools:")
     print("  1. research_paper_probe - Query the RAG knowledge base")
     print("  2. search_arxiv - Search arXiv for papers")
     print("  3. download_paper - Download and index papers")
     print("  4. generate_report - Generate PDF reports from markdown")
+    print()
+    
+    # Initialize RAG system BEFORE starting the server
+    # This ensures all PDFs are indexed before accepting queries
+    initialize_rag_on_startup()
+    
+    print("🌐 Server starting on http://0.0.0.0:8787")
+    print("="*60 + "\n")
+    
     mcp.run(transport="sse")

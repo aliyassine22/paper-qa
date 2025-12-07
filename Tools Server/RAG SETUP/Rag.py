@@ -174,6 +174,9 @@ class RAGSearchTool(BaseTool):
         
         print(f"📄 Found {len(missing_paths)} new paper(s) to index...")
         
+        # Batch size for embedding to avoid OpenAI token limits
+        BATCH_SIZE = 400
+        
         for pdf_path in missing_paths:
             try:
                 pdf_file = Path(pdf_path)
@@ -198,9 +201,17 @@ class RAGSearchTool(BaseTool):
                 splitter = RecursiveCharacterTextSplitter(chunk_size=1500, chunk_overlap=250)
                 split_docs = splitter.split_documents(raw_docs)
                 
-                # Add to vectordb
-                self._vectordb.add_documents(split_docs)
-                print(f"    ✓ Added {len(split_docs)} chunks")
+                # Add to vectordb in batches to avoid token limits
+                total_chunks = len(split_docs)
+                if total_chunks > BATCH_SIZE:
+                    print(f"    Large paper: {total_chunks} chunks, indexing in batches...")
+                    for i in range(0, total_chunks, BATCH_SIZE):
+                        batch = split_docs[i:i + BATCH_SIZE]
+                        self._vectordb.add_documents(batch)
+                    print(f"    ✓ Added {total_chunks} chunks in {(total_chunks + BATCH_SIZE - 1) // BATCH_SIZE} batches")
+                else:
+                    self._vectordb.add_documents(split_docs)
+                    print(f"    ✓ Added {total_chunks} chunks")
                 
             except Exception as e:
                 print(f"    ✗ Failed to index {pdf_path}: {e}")
@@ -260,12 +271,33 @@ class RAGSearchTool(BaseTool):
         split_docs = splitter.split_documents(raw_docs)
 
         self.persist_directory.mkdir(parents=True, exist_ok=True)
-        self._vectordb = Chroma.from_documents(
-            documents=split_docs,
-            embedding=self._embeddings,
-            collection_name=self.collection_name,
-            persist_directory=str(self.persist_directory),
-        )
+        
+        # Batch documents to avoid OpenAI token limits (max 300k tokens per request)
+        # Estimate ~500 tokens per chunk on average, so batch ~400 docs at a time to be safe
+        BATCH_SIZE = 400
+        total_docs = len(split_docs)
+        
+        print(f"Indexing {total_docs} document chunks in batches of {BATCH_SIZE}...")
+        
+        for i in range(0, total_docs, BATCH_SIZE):
+            batch = split_docs[i:i + BATCH_SIZE]
+            batch_num = (i // BATCH_SIZE) + 1
+            total_batches = (total_docs + BATCH_SIZE - 1) // BATCH_SIZE
+            print(f"  → Batch {batch_num}/{total_batches}: Embedding {len(batch)} chunks...")
+            
+            if i == 0:
+                # First batch: create the vectordb
+                self._vectordb = Chroma.from_documents(
+                    documents=batch,
+                    embedding=self._embeddings,
+                    collection_name=self.collection_name,
+                    persist_directory=str(self.persist_directory),
+                )
+            else:
+                # Subsequent batches: add to existing vectordb
+                self._vectordb.add_documents(batch)
+        
+        print(f"✓ Successfully indexed {total_docs} chunks from {len(raw_docs)} pages")
 
     def _initialize_components(self):
         """Initialize the RAG components if not already initialized."""
