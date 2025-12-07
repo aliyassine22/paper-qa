@@ -261,21 +261,26 @@ REPORTS_DIR = Path("C:/your/custom/reports/path")
 |------|----------|------|-------------|
 | `Frontend/app.py` | `API_BASE_URL` | 14 | Backend URL for frontend |
 
-### 6. Agent Prompt File
+### 6. Agent Prompt Files
 
-**Location:** `Agentic System/Agent SetUp/prompt.md`
+**Location:** `Agentic System/Agent SetUp/Prompts/`
+
+**Available prompts:**
+- `prompt_final.md` - Production prompt (currently active)
+- `prompt_v0.md` - Initial version
+- `prompt_v1.md` - Improved version
 
 **File to modify:**
 
 | File | Variable | Line | Description |
 |------|----------|------|-------------|
-| `Agentic System/Agent SetUp/agent.py` | File path in `open()` | 129 | Path to system prompt file |
+| `Agentic System/Agent SetUp/agent.py` | `PROMPT_PATH` | 132-133 | Path to system prompt file |
 
-**To change the prompt file path:**
+**To change the prompt file:**
 ```python
-# In agent.py (line 129-130)
-with open(r"C:\your\custom\path\prompt.md", "r", encoding="utf-8") as file:
-    RESEARCH_ASSISTANT_PROMPT = file.read()
+# In agent.py (line 131-132)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+PROMPT_PATH = os.path.join(BASE_DIR, "Prompts", "prompt_final.md")  # Change filename here
 ```
 
 ---
@@ -409,7 +414,10 @@ Research Assistant Multi Agent System/
 │   └── Agent SetUp/
 │       ├── __init__.py
 │       ├── agent.py              # LangGraph agent + MCP connection
-│       └── prompt.md             # System prompt for the agent
+│       └── Prompts/              # System prompts directory
+│           ├── prompt_final.md   # Production prompt (active)
+│           ├── prompt_v0.md      # Initial version
+│           └── prompt_v1.md      # Improved version
 │
 ├── Frontend/                     # Streamlit Web UI (port 8501)
 │   └── app.py                    # Streamlit application
