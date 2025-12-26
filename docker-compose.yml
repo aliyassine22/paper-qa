@@ -1,0 +1,64 @@
+version: '3.8'
+
+services:
+  # ============== MCP Server ==============
+  mcp-server:
+    build:
+      context: .
+      dockerfile: MCP-Server/DockerFile
+    container_name: research-mcp-server
+    ports:
+      - "8787:8787"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - PAPERS_DIR=/data/Papers
+      - VECTORDB_DIR=/data/VectorDB
+      - REPORTS_DIR=/data/Reports
+    volumes:
+      # Bind mount user's data directories
+      - ${PAPERS_DIR:-./data/Papers}:/data/Papers
+      - ${VECTORDB_DIR:-./data/VectorDB}:/data/VectorDB
+      - ${REPORTS_DIR:-./data/Reports}:/data/Reports
+    restart: unless-stopped
+    networks:
+      - research-network
+
+  # ============== Backend (Agent) ==============
+  backend:
+    build:
+      context: .
+      dockerfile: Backend/DockerFile
+    container_name: research-backend
+    ports:
+      - "8000:8000"
+    environment:
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - MCP_SERVER_URL=http://mcp-server:8787/sse
+      - MODEL_NAME=${MODEL_NAME:-gpt-4o-mini}
+    depends_on:
+      mcp-server:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - research-network
+
+  # ============== Frontend ==============
+  frontend:
+    build:
+      context: .
+      dockerfile: Frontend/DockerFile
+    container_name: research-frontend
+    ports:
+      - "8501:8501"
+    environment:
+      - API_BASE_URL=http://backend:8000
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - research-network
+
+networks:
+  research-network:
+    driver: bridge

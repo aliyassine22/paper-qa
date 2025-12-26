@@ -1,0 +1,29 @@
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__
+*.pyc
+*.pyo
+.venv
+venv
+.env
+
+# IDE
+.vscode
+.idea
+*.swp
+
+# Build artifacts
+*.egg-info
+dist
+build
+
+# Development
+Build Up Phase/
+*.ipynb
+.ipynb_checkpoints
+
+# Data (mounted as volumes)
+data/

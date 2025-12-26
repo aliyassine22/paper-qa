@@ -1,0 +1,20 @@
+version: '3.8'
+
+# Development overrides - enables hot reload
+services:
+  mcp-server:
+    volumes:
+      # Mount source code for hot reload
+      - "./MCP-Server:/app:ro"
+      # Data mounts (inherited from main compose)
+    environment:
+      - PYTHONDONTWRITEBYTECODE=1
+
+  backend:
+    volumes:
+      - "./Backend:/app:ro"
+    command: ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+
+  frontend:
+    volumes:
+      - ./Frontend:/app:ro

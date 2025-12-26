@@ -2,7 +2,7 @@
 Research Assistant Frontend - Streamlit UI
 A beautiful, animated interface for the Research Assistant Agentic System.
 """
-
+import os
 import streamlit as st
 import requests
 import json
@@ -21,7 +21,7 @@ st.set_page_config(
 
 # ============== Configuration ==============
 
-API_BASE_URL = "http://localhost:8000"
+API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8000")
 HEALTH_ENDPOINT = f"{API_BASE_URL}/health"
 STATUS_ENDPOINT = f"{API_BASE_URL}/status"
 CHAT_ENDPOINT = f"{API_BASE_URL}/chat"

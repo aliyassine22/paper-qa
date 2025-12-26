@@ -41,3 +41,8 @@ temp/
 
 # Virtual Environment
 .venv/
+
+# Local Files
+data/*
+
+
